@@ -6,10 +6,63 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// MODELS
+model User {
+  id                    String     @id @default(uuid())
+  circle_member_id      String     @unique
+  email                 String     @unique
+  name                  String?
+  avatar_url            String?
+  stripe_connect_id     String?
+  kyc_status            KycStatus  @default(NOT_STARTED)
+  login_code            String?
+  login_code_expires_at DateTime?
+  created_at            DateTime   @default(now())
+  referralsIntroduced   Referral[] @relation("Introducer")
+  referralsReceived     Referral[] @relation("Receiver")
+  sessions              Session[]
+}
+
+model Session {
+  id        String   @id
+  user_id   String
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Referral {
+  id                 String    @id @default(uuid())
+  introducer         User      @relation("Introducer", fields: [introducer_user_id], references: [id])
+  introducer_user_id String
+  receiver           User      @relation("Receiver", fields: [receiver_user_id], references: [id])
+  receiver_user_id   String
+  lead_name          String
+  lead_company       String
+  lead_email         String
+  lead_phone         String
+  deal_value         Float
+  stage              DealStage @default(NEW)
+  created_at         DateTime  @default(now())
+}
+
+// ENUMS
+enum KycStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  VERIFIED
+  FAILED
+}
+
+enum DealStage {
+  NEW
+  CONTACTED
+  WON
 }

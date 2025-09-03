@@ -6,17 +6,29 @@ import {
 import { createLoginCode } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { HttpStatusCode } from "axios";
+import z from "zod";
+
+// payload validation schema
+const emailVerifySchema = z.object({
+  email: z.string().email("Invalid email"),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
 
-    if (!email) {
+    const validationResult = emailVerifySchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Email is required" },
+        {
+          error: "Invalid request data",
+          details: validationResult.error.issues,
+        },
         { status: HttpStatusCode.BadRequest }
       );
     }
+
+    const { email } = body;
 
     // verify if user exists in Circle
     const circleMember = await verifyCircleMemberByEmail(email);
@@ -62,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Login code sent successfully",
+      message: "Login code sent to your Circle DM!",
     });
   } catch (error) {
     console.error("Error in verify-email:", error);

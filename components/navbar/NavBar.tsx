@@ -1,3 +1,5 @@
+"use client";
+
 import { User } from "@prisma/client";
 import React from "react";
 import { Button } from "@/components/ui/button";
@@ -5,9 +7,11 @@ import api, { ApiRoutes, Routes } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavBarProps {
-  user: User;
+  user: Omit<User, "login_code" | "login_code_expires_at" | "created_at">;
   children: React.ReactNode;
 }
 
@@ -32,16 +36,30 @@ export default function NavBar({ user, children }: NavBarProps) {
           <nav className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Referral Commission System</h1>
             <div className="flex items-center gap-4">
-              <a href="/referral" className="text-sm hover:underline">
+              <Link
+                href={Routes.referral}
+                className="text-sm hover:font-semibold transition-all"
+              >
                 Submit Referral
-              </a>
-              <a href="/deals" className="text-sm hover:underline">
-                Deal Pipeline
-              </a>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  Welcome, {user.name || user.email}
-                </span>
+              </Link>
+              <Link
+                href={Routes.deals}
+                className="text-sm hover:font-semibold transition-all"
+              >
+                Deals Pipeline
+              </Link>
+              <div className="flex items-center gap-3 pl-5 border-l">
+                <Avatar>
+                  <AvatarImage src={user.avatar_url ?? ""} />
+                  <AvatarFallback>
+                    {user.name ? user.name[0] + user.name[1] : ""}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="text-sm text-muted-foreground">
+                  Welcome,&nbsp;
+                  {user.name || user.email}
+                </div>
 
                 <Button
                   variant="outline"

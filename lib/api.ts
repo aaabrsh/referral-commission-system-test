@@ -19,6 +19,7 @@ export const ApiRoutes = {
   verify_code: "/auth/verify-code",
   verify_email: "/auth/verify-email",
   referrals: "/referrals",
+  stripeConnect: "/stripe/connect",
 };
 
 export default api;

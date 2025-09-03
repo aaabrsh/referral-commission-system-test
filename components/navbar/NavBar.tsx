@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StripeConnectButton } from "@/components/stripe/StripeConnectButton";
 
 interface NavBarProps {
   user: Omit<User, "login_code" | "login_code_expires_at" | "created_at">;
@@ -32,7 +33,7 @@ export default function NavBar({ user, children }: NavBarProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Referral Commission System</h1>
             <div className="flex items-center gap-4">
@@ -49,6 +50,7 @@ export default function NavBar({ user, children }: NavBarProps) {
                 Deals Pipeline
               </Link>
               <div className="flex items-center gap-3 pl-5 border-l">
+                <StripeConnectButton />
                 <Avatar>
                   <AvatarImage src={user.avatar_url ?? ""} />
                   <AvatarFallback>
@@ -75,7 +77,7 @@ export default function NavBar({ user, children }: NavBarProps) {
           </nav>
         </div>
       </header>
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-[55rem] mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }

@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
 import Spinner from "@/components/ui/spinner";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 interface LoginCodeInputProps {
   isLoading: boolean;
@@ -20,12 +22,29 @@ interface LoginCodeInputProps {
   onBackClick: () => void;
 }
 
+const loginCodeSchema = z.object({
+  code: z.string().min(1, "login code is required"),
+});
+
+type LoginCodeFormData = z.infer<typeof loginCodeSchema>;
+
 export default function LoginCodeInput({
   isLoading,
   onLoginClick,
   onBackClick,
 }: LoginCodeInputProps) {
-  const [code, setCode] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<LoginCodeFormData>({
+    resolver: zodResolver(loginCodeSchema),
+    mode: "onChange",
+  });
+
+  const onSubmit = ({ code }: LoginCodeFormData) => {
+    onLoginClick(code);
+  };
 
   return (
     <Card>
@@ -42,28 +61,26 @@ export default function LoginCodeInput({
         </div>
       </CardHeader>
       <CardContent>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onLoginClick(code);
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-6">
             <div className="grid gap-6">
               <div className="grid gap-3">
-                <Label htmlFor="email">Login Code</Label>
+                <Label htmlFor="code">Login Code</Label>
                 <Input
-                  id="email"
+                  id="code"
                   type="text"
                   placeholder="123456"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  {...register("code")}
+                  className={errors.code ? "border-red-500" : ""}
                 />
+                {errors.code && (
+                  <p className="text-xs text-red-500">{errors.code.message}</p>
+                )}
               </div>
               <Button
                 type="submit"
                 className="w-full flex gap-2 hover:gap-3 transition-all cursor-pointer"
-                disabled={isLoading || !code}
+                disabled={isLoading || !isValid}
               >
                 {isLoading ? (
                   <Spinner />

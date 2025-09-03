@@ -21,7 +21,9 @@ export default function Login() {
     try {
       const response = await api.post(ApiRoutes.verify_email, { email });
 
-      toast.success("Login code sent to your Circle DM!");
+      toast.success(
+        response.data.message || "Login code sent to your Circle DM!"
+      );
       setIsEmailVerified(true);
     } catch (error: any) {
       console.error("Error sending login code:", error);
@@ -42,7 +44,7 @@ export default function Login() {
     try {
       const response = await api.post(ApiRoutes.verify_code, { email, code });
 
-      toast.success("Login successful!");
+      toast.success(response.data.message || "Login successful!");
       // Redirect to authenticated area
       router.push(Routes.deals);
     } catch (error: any) {

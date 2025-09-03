@@ -13,17 +13,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import Spinner from "@/components/ui/spinner";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface EmailInputProps {
   isLoading: boolean;
   onSendClick: (email: string) => void;
 }
 
+const emailSchema = z.object({
+  email: z.string().min(1, "email is required").email("Invalid email"),
+});
+
+type EmailFormData = z.infer<typeof emailSchema>;
+
 export default function EmailInput({
   isLoading,
   onSendClick,
 }: EmailInputProps) {
-  const [email, setEmail] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<EmailFormData>({
+    resolver: zodResolver(emailSchema),
+    mode: "onChange",
+  });
+
+  const onSubmit = ({ email }: EmailFormData) => {
+    onSendClick(email);
+  };
 
   return (
     <Card>
@@ -34,12 +54,7 @@ export default function EmailInput({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSendClick(email);
-          }}
-        >
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-6">
             <div className="grid gap-6">
               <div className="grid gap-3">
@@ -48,15 +63,17 @@ export default function EmailInput({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
+                  className={errors.email ? "border-red-500" : ""}
                 />
+                {errors.email && (
+                  <p className="text-xs text-red-500">{errors.email.message}</p>
+                )}
               </div>
               <Button
                 type="submit"
                 className="w-full flex gap-2 hover:gap-3 transition-all cursor-pointer"
-                disabled={isLoading || !email}
+                disabled={isLoading || !isValid}
               >
                 {isLoading ? (
                   <Spinner />

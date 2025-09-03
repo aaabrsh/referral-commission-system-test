@@ -7,6 +7,7 @@ import {
 import prisma from "@/lib/prisma";
 import { HttpStatusCode } from "axios";
 import { z } from "zod";
+import { DealStage } from "@prisma/client";
 
 const referralSchema = z.object({
   receiverEmail: z.string().email("Invalid receiver email"),

@@ -40,7 +40,7 @@ export default function Login() {
     setLoginCode(code);
 
     try {
-      const response = await api.post(ApiRoutes.verify_code, { code });
+      const response = await api.post(ApiRoutes.verify_code, { email, code });
 
       toast.success("Login successful!");
       // Redirect to authenticated area

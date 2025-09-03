@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { User } from "@/types/user";
 
 export const generateLoginCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-export const createLoginCode = async (user_id: string): Promise<string> => {
+export const createLoginCode = async (user_id: string) => {
   const code = generateLoginCode();
   const expires_at = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
@@ -21,10 +22,7 @@ export const createLoginCode = async (user_id: string): Promise<string> => {
   return code;
 };
 
-export const validateLoginCode = async (
-  email: string,
-  code: string
-): Promise<any> => {
+export const validateLoginCode = async (email: string, code: string) => {
   const user = await prisma.user.findFirst({
     where: {
       email,
@@ -42,7 +40,7 @@ export const validateLoginCode = async (
   return user;
 };
 
-export const clearLoginCode = async (user_id: string): Promise<void> => {
+export const clearLoginCode = async (user_id: string) => {
   await prisma.user.update({
     where: { id: user_id },
     data: {
@@ -52,7 +50,7 @@ export const clearLoginCode = async (user_id: string): Promise<void> => {
   });
 };
 
-export const createSession = async (user_id: string): Promise<string> => {
+export const createSession = async (user_id: string) => {
   const session_id = Math.random().toString(36).substr(2, 9);
 
   await prisma.session.create({
@@ -66,10 +64,22 @@ export const createSession = async (user_id: string): Promise<string> => {
   return session_id;
 };
 
-export const getSession = async (session_id: string): Promise<any> => {
+export const getSession = async (session_id: string) => {
   const session = await prisma.session.findUnique({
     where: { id: session_id },
-    include: { user: true },
+    include: {
+      user: {
+        select: {
+          id: true,
+          circle_member_id: true,
+          email: true,
+          name: true,
+          avatar_url: true,
+          stripe_connect_id: true,
+          kyc_status: true,
+        },
+      },
+    },
   });
 
   if (!session || session.expiresAt < new Date()) {
@@ -84,13 +94,13 @@ export const getSession = async (session_id: string): Promise<any> => {
   return session;
 };
 
-export const deleteSession = async (session_id: string): Promise<void> => {
+export const deleteSession = async (session_id: string) => {
   await prisma.session.delete({
     where: { id: session_id },
   });
 };
 
-export const setSessionCookie = async (session_id: string): Promise<void> => {
+export const setSessionCookie = async (session_id: string) => {
   const cookieStore = await cookies();
   cookieStore.set("session", session_id, {
     httpOnly: true,
@@ -101,7 +111,7 @@ export const setSessionCookie = async (session_id: string): Promise<void> => {
   });
 };
 
-export const getCurrentUser = async (): Promise<any> => {
+export const getCurrentSession = async () => {
   const cookieStore = await cookies();
   const session_id = cookieStore.get("session")?.value;
 
@@ -114,13 +124,18 @@ export const getCurrentUser = async (): Promise<any> => {
     return null;
   }
 
-  return session.user;
+  return session;
 };
 
-export const requireAuth = async (): Promise<any> => {
-  const user = await getCurrentUser();
+export const getCurrentUser = async () => {
+  const session = await getCurrentSession();
+  return session ? session.user : null;
+};
+
+export const requireAuth = async () => {
+  const user: User | null = await getCurrentUser();
   if (!user) {
     redirect("/login");
   }
-  return user;
+  return user as User;
 };

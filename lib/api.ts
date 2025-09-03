@@ -18,6 +18,7 @@ export const ApiRoutes = {
   me: "/auth/me",
   verify_code: "/auth/verify-code",
   verify_email: "/auth/verify-email",
+  referrals: "/referrals",
 };
 
 export default api;

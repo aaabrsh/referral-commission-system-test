@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { User } from "@/types/user";
+import { Routes } from "@/lib/api";
 
 export const generateLoginCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -51,17 +52,14 @@ export const clearLoginCode = async (user_id: string) => {
 };
 
 export const createSession = async (user_id: string) => {
-  const session_id = Math.random().toString(36).substr(2, 9);
-
-  await prisma.session.create({
+  const session = await prisma.session.create({
     data: {
-      id: session_id,
       user_id: user_id,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000 * 2), // 48 hours
     },
   });
 
-  return session_id;
+  return session.id;
 };
 
 export const getSession = async (session_id: string) => {
@@ -84,9 +82,7 @@ export const getSession = async (session_id: string) => {
 
   if (!session || session.expiresAt < new Date()) {
     if (session) {
-      await prisma.session.delete({
-        where: { id: session_id },
-      });
+      await deleteSession(session_id);
     }
     return null;
   }
@@ -135,7 +131,7 @@ export const getCurrentUser = async () => {
 export const requireAuth = async () => {
   const user: User | null = await getCurrentUser();
   if (!user) {
-    redirect("/login");
+    redirect(Routes.login);
   }
   return user as User;
 };

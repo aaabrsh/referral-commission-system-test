@@ -67,19 +67,27 @@ export async function POST(request: NextRequest) {
     }
 
     // verify receiver exists in Circle
-    const receiverMember = await verifyCircleMemberByEmail(receiverEmail);
+    let receiverMember = await verifyCircleMemberByEmail(receiverEmail);
     if (!receiverMember) {
-      return NextResponse.json(
-        { error: "Receiver not found in Circle community" },
-        { status: HttpStatusCode.NotFound }
-      );
+      if (process.env.SKIP_CIRCLE_INTEGRATION === "true") {
+        receiverMember = {
+          id: crypto.randomUUID(),
+          name: "Test Circle Member",
+          email: receiverEmail,
+          avatar_url: "",
+        };
+      } else {
+        return NextResponse.json(
+          { error: "Receiver not found in Circle community" },
+          { status: HttpStatusCode.NotFound }
+        );
+      }
     }
 
     // get or create receiver user
     let receiverUser = await prisma.user.findUnique({
       where: { email: receiverEmail.toLowerCase() },
     });
-
     if (!receiverUser) {
       receiverUser = await prisma.user.create({
         data: {

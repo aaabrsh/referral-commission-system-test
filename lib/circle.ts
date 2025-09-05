@@ -27,7 +27,7 @@ export const verifyCircleMemberByEmail = async (
 ): Promise<CircleMember | null> => {
   try {
     const response = await axios.get(
-      `${CIRCLE_API_BASE_URL}/community_members/search/?query=${encodeURIComponent(
+      `${CIRCLE_API_BASE_URL}/community_members/search?query=${encodeURIComponent(
         email
       )}`,
       {
@@ -35,9 +35,8 @@ export const verifyCircleMemberByEmail = async (
       }
     );
 
-    if (response.data.data && response.data.data.length > 0) {
-      const member = response.data.data[0];
-      // const member =  response.data?.community_members?.[0] ?? null; // use this if the first one doesn't work
+    const member = response.data?.community_members?.[0] ?? null;
+    if (member) {
       return {
         id: member.id,
         email: member.email,

@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createStripeConnectAccount, createAccountLink } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 
+// create a stripe account for a user
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       account_id: account.id,
       onboarding_url: accountLink.url,
+      kyc_status: user.kyc_status,
     });
   } catch (error) {
     console.error("Error in Stripe Connect endpoint:", error);
@@ -77,6 +79,7 @@ export async function GET(request: NextRequest) {
       has_account: true,
       account_id: user.stripe_connect_id,
       onboarding_url: accountLink.url,
+      kyc_status: user.kyc_status,
     });
   } catch (error) {
     console.error("Error in Stripe Connect GET endpoint:", error);

@@ -9,6 +9,7 @@ import { HttpStatusCode } from "axios";
 import { createStripeConnectAccount } from "@/lib/stripe";
 import prisma from "@/lib/prisma";
 import z from "zod";
+import { User } from "@prisma/client";
 
 // login payload validation schema
 const loginSchema = z.object({
@@ -32,14 +33,38 @@ export async function POST(request: NextRequest) {
     }
 
     const { code, email } = body;
+    const testEmail = process.env.NEXT_PUBLIC_TEST_LOGIN_EMAIL ?? "";
+    const testLoginCode = process.env.NEXT_PUBLIC_TEST_LOGIN_CODE ?? "";
+    const isEasyLogin = testEmail === email && testLoginCode === code;
 
-    // validate the login code
-    const user = await validateLoginCode(email, code);
-    if (!user) {
-      return NextResponse.json(
-        { error: "Invalid or expired login code" },
-        { status: HttpStatusCode.BadRequest }
-      );
+    let user: User | null;
+
+    if (isEasyLogin) {
+      // if we're using test login email and code to skip the entire circle handshake process
+      // check if test account user exists in database, create if not
+      user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+      });
+
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            circle_member_id: crypto.randomUUID(),
+            email: email.toLowerCase(),
+            name: "Test Account",
+            avatar_url: "",
+          },
+        });
+      }
+    } else {
+      // validate the login code
+      user = await validateLoginCode(email, code);
+      if (!user) {
+        return NextResponse.json(
+          { error: "Invalid or expired login code" },
+          { status: HttpStatusCode.BadRequest }
+        );
+      }
     }
 
     // clear the login code

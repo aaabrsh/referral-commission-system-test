@@ -37,7 +37,7 @@ export default function Login() {
     }
   };
 
-  const handleLoginClick = async (code: string) => {
+  const handleLoginClick = async (email: string, code: string) => {
     setIsLoading(true);
     setLoginCode(code);
 
@@ -59,14 +59,29 @@ export default function Login() {
     }
   };
 
+  const handleTestAccountLogin = () => {
+    const testEmail = process.env.NEXT_PUBLIC_TEST_LOGIN_EMAIL;
+    const testLoginCode = process.env.NEXT_PUBLIC_TEST_LOGIN_CODE;
+
+    if (!testEmail || !testLoginCode) {
+      toast.error("test account credentials not found!");
+      return;
+    }
+
+    setEmail(testEmail);
+    setLoginCode(testLoginCode);
+
+    handleLoginClick(testEmail, testLoginCode);
+  };
+
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex flex-col gap-6">
-          {isEmailVerified ? (
+          {isEmailVerified && email ? (
             <LoginCodeInput
               isLoading={isLoading}
-              onLoginClick={handleLoginClick}
+              onLoginClick={(code) => handleLoginClick(email, code)}
               onBackClick={() => {
                 setIsEmailVerified(false);
                 setEmail("");
@@ -75,6 +90,13 @@ export default function Login() {
           ) : (
             <EmailInput isLoading={isLoading} onSendClick={handleSendClick} />
           )}
+
+          <p
+            className="underline text-center font-light cursor-pointer"
+            onClick={handleTestAccountLogin}
+          >
+            use test account
+          </p>
         </div>
       </div>
     </div>

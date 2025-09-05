@@ -95,6 +95,7 @@ export default function ReferralForm({ user }: ReferralFormProps) {
       reset();
 
       router.push(Routes.deals);
+      router.refresh();
     } catch (error: any) {
       console.error("Error submitting referral:", error);
       const errorMessage =
